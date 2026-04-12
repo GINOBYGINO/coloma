@@ -1,0 +1,472 @@
+[gd_scene load_steps=13 format=3 uid="uid://wwa0a1kivdgk"]
+
+[ext_resource type="Script" uid="uid://byqmcqmf8fmfp" path="res://script/Main.gd" id="1_main"]
+[ext_resource type="FontFile" uid="uid://djmvmed1tuf5b" path="res://asset/Font/Xanmono-Regular.ttf" id="2_rvslj"]
+[ext_resource type="StyleBox" uid="uid://bls8db1owr6qa" path="res://Main.tres" id="3_0bbpv"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel_target"]
+bg_color = Color(1, 1, 1, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.2, 0.2, 0.2, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel_mix"]
+bg_color = Color(1, 1, 1, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.2, 0.2, 0.2, 1)
+corner_radius_top_left = 80
+corner_radius_top_right = 80
+corner_radius_bottom_right = 80
+corner_radius_bottom_left = 80
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel_controls"]
+bg_color = Color(0.101961, 0.101961, 0.101961, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.2, 0.2, 0.2, 1)
+corner_radius_top_left = 50
+corner_radius_top_right = 50
+corner_radius_bottom_right = 50
+corner_radius_bottom_left = 50
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_r"]
+bg_color = Color(0.905882, 0.298039, 0.235294, 1)
+corner_radius_top_left = 25
+corner_radius_top_right = 25
+corner_radius_bottom_right = 25
+corner_radius_bottom_left = 25
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_y"]
+bg_color = Color(0.945098, 0.768627, 0.0588235, 1)
+corner_radius_top_left = 25
+corner_radius_top_right = 25
+corner_radius_bottom_right = 25
+corner_radius_bottom_left = 25
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_b"]
+bg_color = Color(0.203922, 0.596078, 0.858824, 1)
+corner_radius_top_left = 25
+corner_radius_top_right = 25
+corner_radius_bottom_right = 25
+corner_radius_bottom_left = 25
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_w"]
+bg_color = Color(0.933333, 0.933333, 0.933333, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 25
+corner_radius_top_right = 25
+corner_radius_bottom_right = 25
+corner_radius_bottom_left = 25
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_k"]
+bg_color = Color(0.0666667, 0.0666667, 0.0666667, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.266667, 0.266667, 0.266667, 1)
+corner_radius_top_left = 25
+corner_radius_top_right = 25
+corner_radius_bottom_right = 25
+corner_radius_bottom_left = 25
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_action_gold"]
+bg_color = Color(0, 0, 0, 0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.831373, 0.686275, 0.215686, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="Main" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_main")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.0588235, 0.0588235, 0.0588235, 1)
+
+[node name="HoldTimer" type="Timer" parent="."]
+wait_time = 0.2
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = -103.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="DisplayRow" type="HBoxContainer" parent="CenterContainer"]
+layout_mode = 2
+theme_override_constants/separation = 30
+alignment = 1
+
+[node name="TargetColumn" type="VBoxContainer" parent="CenterContainer/DisplayRow"]
+layout_mode = 2
+theme_override_constants/separation = 15
+alignment = 1
+
+[node name="TargetLabel" type="Label" parent="CenterContainer/DisplayRow/TargetColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.4, 0.4, 1)
+theme_override_fonts/font = ExtResource("2_rvslj")
+theme_override_font_sizes/font_size = 12
+text = "TARGET"
+horizontal_alignment = 1
+
+[node name="TargetSwatch" type="Panel" parent="CenterContainer/DisplayRow/TargetColumn"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel_target")
+
+[node name="MixColumn" type="VBoxContainer" parent="CenterContainer/DisplayRow"]
+layout_mode = 2
+theme_override_constants/separation = 15
+alignment = 1
+
+[node name="MixLabel" type="Label" parent="CenterContainer/DisplayRow/MixColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.4, 0.4, 1)
+theme_override_fonts/font = ExtResource("2_rvslj")
+theme_override_font_sizes/font_size = 12
+text = "CURRENT"
+horizontal_alignment = 1
+
+[node name="MixSwatch" type="Panel" parent="CenterContainer/DisplayRow/MixColumn"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 160)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel_mix")
+
+[node name="DropLabel" type="Label" parent="CenterContainer/DisplayRow/MixColumn/MixSwatch"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 8.0
+offset_bottom = 36.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.4, 0.4, 0.4, 1)
+theme_override_fonts/font = ExtResource("2_rvslj")
+theme_override_font_sizes/font_size = 12
+text = "0 DROPS"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 407.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MainVBox" type="VBoxContainer" parent="Center"]
+layout_mode = 2
+theme_override_constants/separation = 40
+alignment = 1
+
+[node name="Header" type="VBoxContainer" parent="Center/MainVBox"]
+layout_mode = 2
+theme_override_constants/separation = 5
+alignment = 1
+
+[node name="ControlsBar" type="Panel" parent="Center/MainVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(420, 90)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel_controls")
+
+[node name="Margin" type="MarginContainer" parent="Center/MainVBox/ControlsBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="PigmentRow" type="HBoxContainer" parent="Center/MainVBox/ControlsBar/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="BtnR" type="Button" parent="Center/MainVBox/ControlsBar/Margin/PigmentRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_horizontal = 4
+focus_mode = 0
+theme_override_styles/focus = SubResource("StyleBoxFlat_btn_r")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_btn_r")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_r")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_r")
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_r")
+
+[node name="BtnY" type="Button" parent="Center/MainVBox/ControlsBar/Margin/PigmentRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_horizontal = 4
+focus_mode = 0
+theme_override_styles/focus = SubResource("StyleBoxFlat_btn_y")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_btn_y")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_y")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_y")
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_y")
+
+[node name="BtnB" type="Button" parent="Center/MainVBox/ControlsBar/Margin/PigmentRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_horizontal = 4
+focus_mode = 0
+theme_override_styles/focus = SubResource("StyleBoxFlat_btn_b")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_btn_b")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_b")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_b")
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_b")
+
+[node name="BtnW" type="Button" parent="Center/MainVBox/ControlsBar/Margin/PigmentRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_horizontal = 4
+focus_mode = 0
+theme_override_styles/focus = SubResource("StyleBoxFlat_btn_w")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_btn_w")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_w")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_w")
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_w")
+
+[node name="BtnK" type="Button" parent="Center/MainVBox/ControlsBar/Margin/PigmentRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_horizontal = 4
+focus_mode = 0
+theme_override_styles/focus = SubResource("StyleBoxFlat_btn_k")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_btn_k")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_k")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_k")
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_k")
+
+[node name="ActionsRow" type="HBoxContainer" parent="Center/MainVBox"]
+layout_mode = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="BtnClear" type="Button" parent="Center/MainVBox/ActionsRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 40)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.941176, 0.941176, 0.941176, 1)
+theme_override_fonts/font = ExtResource("2_rvslj")
+theme_override_font_sizes/font_size = 14
+theme_override_styles/focus = ExtResource("3_0bbpv")
+theme_override_styles/disabled = ExtResource("3_0bbpv")
+theme_override_styles/hover = ExtResource("3_0bbpv")
+theme_override_styles/pressed = ExtResource("3_0bbpv")
+theme_override_styles/normal = ExtResource("3_0bbpv")
+text = "Clear"
+flat = true
+
+[node name="BtnUndo" type="Button" parent="Center/MainVBox/ActionsRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 40)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.941176, 0.941176, 0.941176, 1)
+theme_override_fonts/font = ExtResource("2_rvslj")
+theme_override_font_sizes/font_size = 14
+theme_override_styles/focus = ExtResource("3_0bbpv")
+theme_override_styles/disabled = ExtResource("3_0bbpv")
+theme_override_styles/hover = ExtResource("3_0bbpv")
+theme_override_styles/pressed = ExtResource("3_0bbpv")
+theme_override_styles/normal = ExtResource("3_0bbpv")
+text = "Undo"
+flat = true
+
+[node name="BtnSubmit" type="Button" parent="Center/MainVBox/ActionsRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 40)
+layout_mode = 2
+theme_override_colors/font_disabled_color = Color(1, 1, 1, 1)
+theme_override_colors/icon_disabled_color = Color(0.831373, 0.686275, 0.215686, 1)
+theme_override_colors/icon_hover_pressed_color = Color(0.831373, 0.686275, 0.215686, 1)
+theme_override_colors/icon_hover_color = Color(0.831373, 0.686275, 0.215686, 1)
+theme_override_colors/icon_pressed_color = Color(0.831373, 0.686275, 0.215686, 1)
+theme_override_colors/icon_focus_color = Color(0.831373, 0.686275, 0.215686, 1)
+theme_override_colors/icon_normal_color = Color(0.831373, 0.686275, 0.215686, 1)
+theme_override_colors/font_color = Color(0.831373, 0.686275, 0.215686, 1)
+theme_override_fonts/font = ExtResource("2_rvslj")
+theme_override_font_sizes/font_size = 14
+theme_override_styles/focus = SubResource("StyleBoxFlat_action_gold")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_action_gold")
+theme_override_styles/hover = SubResource("StyleBoxFlat_action_gold")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_action_gold")
+theme_override_styles/normal = SubResource("StyleBoxFlat_action_gold")
+text = "Submit"
+flat = true
+
+[node name="Header2" type="VBoxContainer" parent="Center/MainVBox"]
+layout_mode = 2
+theme_override_constants/separation = 5
+alignment = 1
+
+[node name="ResultModal" type="Control" parent="."]
+unique_name_in_owner = true
+z_index = 10
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dim" type="ColorRect" parent="ResultModal"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.9)
+
+[node name="ModalCenter" type="CenterContainer" parent="ResultModal"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+
+[node name="ModalVBox" type="VBoxContainer" parent="ResultModal/ModalCenter"]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="ResultTitle" type="Label" parent="ResultModal/ModalCenter/ModalVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.4, 0.4, 1)
+theme_override_fonts/font = ExtResource("2_rvslj")
+theme_override_font_sizes/font_size = 18
+text = "ACCURACY MATCH"
+horizontal_alignment = 1
+
+[node name="ScoreLabel" type="Label" parent="ResultModal/ModalCenter/ModalVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.941176, 0.941176, 0.941176, 1)
+theme_override_fonts/font = ExtResource("2_rvslj")
+theme_override_font_sizes/font_size = 80
+text = "0.0%"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FeedbackLabel" type="Label" parent="ResultModal/ModalCenter/ModalVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.941176, 0.941176, 0.941176, 1)
+theme_override_fonts/font = ExtResource("2_rvslj")
+theme_override_font_sizes/font_size = 20
+text = "..."
+horizontal_alignment = 1
+
+[node name="SplitRow" type="HBoxContainer" parent="ResultModal/ModalCenter/ModalVBox"]
+layout_mode = 2
+theme_override_constants/separation = 0
+alignment = 1
+
+[node name="SplitTargetColor" type="ColorRect" parent="ResultModal/ModalCenter/ModalVBox/SplitRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 100)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SplitPlayerColor" type="ColorRect" parent="ResultModal/ModalCenter/ModalVBox/SplitRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 100)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SplitCaptions" type="HBoxContainer" parent="ResultModal/ModalCenter/ModalVBox"]
+layout_mode = 2
+theme_override_constants/separation = 0
+alignment = 1
+
+[node name="CapTarget" type="Label" parent="ResultModal/ModalCenter/ModalVBox/SplitCaptions"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.4, 0.4, 0.4, 1)
+theme_override_fonts/font = ExtResource("2_rvslj")
+theme_override_font_sizes/font_size = 11
+text = "TARGET"
+horizontal_alignment = 1
+
+[node name="CapPlayer" type="Label" parent="ResultModal/ModalCenter/ModalVBox/SplitCaptions"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.4, 0.4, 0.4, 1)
+theme_override_fonts/font = ExtResource("2_rvslj")
+theme_override_font_sizes/font_size = 11
+text = "YOUR MIX"
+horizontal_alignment = 1
+
+[node name="BtnNext" type="Button" parent="ResultModal/ModalCenter/ModalVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 44)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.941176, 0.941176, 0.941176, 1)
+theme_override_fonts/font = ExtResource("2_rvslj")
+theme_override_font_sizes/font_size = 14
+theme_override_styles/focus = ExtResource("3_0bbpv")
+theme_override_styles/disabled_mirrored = ExtResource("3_0bbpv")
+theme_override_styles/disabled = ExtResource("3_0bbpv")
+theme_override_styles/hover = ExtResource("3_0bbpv")
+theme_override_styles/pressed = ExtResource("3_0bbpv")
+theme_override_styles/normal_mirrored = ExtResource("3_0bbpv")
+theme_override_styles/normal = ExtResource("3_0bbpv")
+text = "NEXT ROUND"

@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colorma 色郎 - 最小可行產品</title>
+    <style>
+        /* 核心視覺風格設定 */
+        :root {
+            --bg-color: #0f0f0f;
+            --panel-bg: #1a1a1a;
+            --text-main: #f0f0f0;
+            --text-muted: #666666;
+            --accent: #d4af37; /* 點綴用金色，增添競技質感 */
+            
+            /* 顏料實體顏色 (UI 顯示用) */
+            --ui-red: #e74c3c;
+            --ui-yellow: #f1c40f;
+            --ui-blue: #3498db;
+            --ui-black: #111111;
+            --ui-white: #eeeeee;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 絕對置中的遊戲主體 */
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+        }
+
+        /* 標題區 */
+        .header {
+            text-align: center;
+            letter-spacing: 4px;
+        }
+        .header h1 {
+            font-size: 24px;
+            font-weight: 300;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+        .header p {
+            font-size: 12px;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+        }
+
+        /* 核心展示區 (目標色與調色盤) */
+        .display-area {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            width: 100%;
+        }
+
+        .color-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .color-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+        }
+
+        /* 目標顏色方塊 */
+        #target-color {
+            width: 120px;
+            height: 120px;
+            border-radius: 12px;
+            background-color: #fff; /* 初始值 */
+            border: 1px solid #333;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        /* 玩家調色大圓 */
+        #mix-color {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background-color: #fff; /* 初始畫布為白紙 */
+            border: 2px solid #333;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            transition: background-color 0.2s ease-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* 色滴計數器 */
+        #drop-count {
+            position: absolute;
+            bottom: -25px;
+            font-size: 12px;
+            color: var(--text-muted);
+            font-family: monospace;
+        }
+
+        /* 顏料控制區 */
+        .controls {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            background: var(--panel-bg);
+            border-radius: 50px;
+            border: 1px solid #333;
+        }
+
+        .drop-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            outline: none;
+            transition: transform 0.1s, box-shadow 0.1s;
+            position: relative;
+        }
+
+        .drop-btn:active {
+            transform: scale(0.85);
+        }
+
+        /* 定義五種基礎色按鈕的外觀 */
+        #btn-R { background-color: var(--ui-red); }
+        #btn-Y { background-color: var(--ui-yellow); }
+        #btn-B { background-color: var(--ui-blue); }
+        #btn-W { background-color: var(--ui-white); border: 1px solid #ccc; }
+        #btn-K { background-color: var(--ui-black); border: 1px solid #444; }
+
+        /* 動作按鈕區 */
+        .actions {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .action-btn {
+            padding: 12px 30px;
+            font-size: 14px;
+            letter-spacing: 2px;
+            background: transparent;
+            color: var(--text-main);
+            border: 1px solid var(--text-muted);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+
+        .action-btn:hover {
+            background: var(--text-main);
+            color: var(--bg-color);
+        }
+
+        #submit-btn {
+            border-color: var(--accent);
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        #submit-btn:hover {
+            background: var(--accent);
+            color: var(--bg-color);
+        }
+
+        /* 結算畫面 (Modal) */
+        #result-modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 100;
+        }
+
+        #result-modal.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .result-content {
+            text-align: center;
+            max-width: 400px;
+        }
+
+        .delta-e-score {
+            font-size: 80px;
+            font-weight: 300;
+            font-family: monospace;
+            margin: 20px 0;
+            color: var(--accent);
+        }
+
+        .result-title {
+            font-size: 18px;
+            letter-spacing: 4px;
+            color: var(--text-muted);
+        }
+
+        .result-feedback {
+            font-size: 20px;
+            margin-bottom: 40px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div class="header">
+            <h1>COLORMA</h1>
+            <p>RYB HARDCORE MIXING</p>
+        </div>
+
+        <div class="display-area">
+            <div class="color-box">
+                <div class="color-label">TARGET 目標</div>
+                <div id="target-color"></div>
+            </div>
+            
+            <div class="color-box">
+                <div class="color-label">CURRENT 目前調配</div>
+                <div id="mix-color">
+                    <div id="drop-count">0 DROPS</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="drop-btn" id="btn-R" onclick="addDrop('R')"></button>
+            <button class="drop-btn" id="btn-Y" onclick="addDrop('Y')"></button>
+            <button class="drop-btn" id="btn-B" onclick="addDrop('B')"></button>
+            <button class="drop-btn" id="btn-W" onclick="addDrop('W')"></button>
+            <button class="drop-btn" id="btn-K" onclick="addDrop('K')"></button>
+        </div>
+
+        <div class="actions">
+            <button class="action-btn" onclick="clearPalette()">Clear 清除</button>
+            <button class="action-btn" id="submit-btn" onclick="submitResult()">Submit 送出</button>
+        </div>
+    </div>
+
+    <!-- 結算畫面 -->
+    <div id="result-modal">
+        <div class="result-content">
+            <div class="result-title">ACCURACY MATCH</div>
+            <div class="delta-e-score" id="score-display">0.0%</div>
+            <div class="result-feedback" id="feedback-display">...</div>
+            <button class="action-btn" onclick="startNewRound()">NEXT ROUND 下一局</button>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * 演算法核心：將 RYB 動作映射到虛擬的 CMY 吸收空間
+         * 這樣才能做到真正的減色法物理直覺 (例如: 黃+藍=綠)
+         */
+        const PIGMENT_PROFILES = {
+            'R': { c: 0.0, m: 1.0, y: 1.0 }, // 紅色顏料吸收青色，反射洋紅與黃
+            'Y': { c: 0.0, m: 0.0, y: 1.0 }, // 黃色顏料
+            'B': { c: 1.0, m: 0.2, y: 0.0 }, // 藍色顏料 (帶有一點點洋紅的青色，這樣混黃色才會變成漂亮的綠色)
+            'W': { c: 0.0, m: 0.0, y: 0.0 }, // 白色 (稀釋吸收率)
+            'K': { c: 1.0, m: 1.0, y: 1.0 }  // 黑色 (全吸收)
+        };
+
+        let currentDrops = [];
+        let targetRGB = { r: 255, g: 255, b: 255 };
+        let currentRGB = { r: 255, g: 255, b: 255 };
+
+        // 初始化遊戲
+        window.onload = () => {
+            startNewRound();
+        };
+
+        // 根據 CMY 濃度計算 RGB
+        function calculateRGBFromDrops(drops) {
+            if (drops.length === 0) return { r: 255, g: 255, b: 255 }; // 空畫布為白色
+
+            let totalC = 0, totalM = 0, totalY = 0;
+            
+            drops.forEach(drop => {
+                let profile = PIGMENT_PROFILES[drop];
+                totalC += profile.c;
+                totalM += profile.m;
+                totalY += profile.y;
+            });
+
+            // 取平均濃度
+            let avgC = totalC / drops.length;
+            let avgM = totalM / drops.length;
+            let avgY = totalY / drops.length;
+
+            // CMY 轉 RGB
+            let r = Math.round(255 * (1 - avgC));
+            let g = Math.round(255 * (1 - avgM));
+            let b = Math.round(255 * (1 - avgY));
+
+            return { r, g, b };
+        }
+
+        // 生成目標顏色
+        function generateTargetColor() {
+            // 為了確保題目是「玩家絕對調得出來」的顏色，我們由系統暗中隨機混合 2~8 滴顏料
+            const possibleDrops = ['R', 'Y', 'B', 'W', 'K'];
+            const dropCount = Math.floor(Math.random() * 7) + 2; // 2 到 8 滴
+            let secretDrops = [];
+            
+            for(let i=0; i<dropCount; i++) {
+                let randomColor = possibleDrops[Math.floor(Math.random() * possibleDrops.length)];
+                secretDrops.push(randomColor);
+            }
+
+            targetRGB = calculateRGBFromDrops(secretDrops);
+            document.getElementById('target-color').style.backgroundColor = `rgb(${targetRGB.r}, ${targetRGB.g}, ${targetRGB.b})`;
+            
+            // Debug 用，可以在 Console 看到答案
+            console.log(`Target generated with: ${secretDrops.join(', ')}`);
+        }
+
+        // 玩家加入一滴顏料
+        function addDrop(colorType) {
+            currentDrops.push(colorType);
+            updatePalette();
+        }
+
+        // 清除畫布
+        function clearPalette() {
+            currentDrops = [];
+            updatePalette();
+        }
+
+        // 更新玩家的調色盤畫面
+        function updatePalette() {
+            currentRGB = calculateRGBFromDrops(currentDrops);
+            document.getElementById('mix-color').style.backgroundColor = `rgb(${currentRGB.r}, ${currentRGB.g}, ${currentRGB.b})`;
+            
+            let countText = currentDrops.length === 1 ? "1 DROP" : `${currentDrops.length} DROPS`;
+            document.getElementById('drop-count').innerText = currentDrops.length === 0 ? "0 DROPS" : countText;
+        }
+
+        // 送出結算
+        function submitResult() {
+            // 計算歐式距離 (Euclidean Distance in RGB space)
+            // 最大的距離約為 441.67 (黑到白的距離: sqrt(255^2 * 3))
+            const maxDist = 441.67;
+            const rDiff = targetRGB.r - currentRGB.r;
+            const gDiff = targetRGB.g - currentRGB.g;
+            const bDiff = targetRGB.b - currentRGB.b;
+            
+            const distance = Math.sqrt(rDiff*rDiff + gDiff*gDiff + bDiff*bDiff);
+            
+            // 轉換為 0~100% 的準確度分數
+            let score = Math.max(0, 100 - ((distance / maxDist) * 100));
+            score = score.toFixed(1);
+
+            // 顯示反饋
+            let feedback = "";
+            if(score >= 98) feedback = "FLAWLESS PERFECT 神乎其技";
+            else if(score >= 90) feedback = "EXCELLENT 優秀";
+            else if(score >= 80) feedback = "GOOD 不錯的直覺";
+            else if(score >= 60) feedback = "ACCEPTABLE 差強人意";
+            else feedback = "POOR 完全偏離";
+
+            document.getElementById('score-display').innerText = `${score}%`;
+            document.getElementById('score-display').style.color = score >= 90 ? "var(--accent)" : "var(--text-main)";
+            document.getElementById('feedback-display').innerText = feedback;
+            
+            // 顯示 Modal
+            document.getElementById('result-modal').classList.add('active');
+        }
+
+        // 開始新的一局
+        function startNewRound() {
+            document.getElementById('result-modal').classList.remove('active');
+            clearPalette();
+            generateTargetColor();
+        }
+    </script>
+</body>
+</html>
