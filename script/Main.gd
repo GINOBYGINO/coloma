@@ -1,6 +1,6 @@
 extends Control
 ## Colorma MVP — Godot 4 移植版
-## 單一腳本集中處理：減色混色、CIELAB ΔE 評分、長按連滴、Undo 懲罰、Tween 彈跳、結算 Split View。
+## 單一腳本集中處理：減色混色、CIELAB ΔE 評分、長按連滴、Tween 彈跳、結算 Split View。
 
 # region 常數與顏料設定
 ## HTML 原版：RYB 映射到虛擬 CMY 吸收空間（減色法直覺）
@@ -23,11 +23,21 @@ const TINT_STRENGTH := {
 
 ## 長按連滴間隔（秒）
 const HOLD_DROP_INTERVAL := 0.2
-## 每次 Undo 從精準度百分比扣點（百分點）
-const UNDO_PENALTY_PERCENT := 0.5
 
 ## D65 參考白（用於 XYZ→Lab）
 const REF_WHITE := Vector3(0.95047, 1.0, 1.08883)
+
+const HP_MAX := 10000
+const HP_INITIAL := 10000
+## 難度用顏料池（關卡越高可選越多色）
+const POOL_3_COLORS: Array[String] = ["R", "Y", "B"]
+const POOL_4_COLORS: Array[String] = ["R", "Y", "B", "W"]
+const POOL_5_COLORS: Array[String] = ["R", "Y", "B", "W", "K"]
+
+const HUD_HP_TEXT_NORMAL := Color(0.941176, 0.941176, 0.941176, 1)
+const HUD_HEART_NORMAL := Color(1, 1, 1, 1)
+const HUD_HP_DAMAGE := Color(1.0, 0.35, 0.35, 1)
+const HUD_HP_HEAL := Color(0.38, 0.96, 0.48, 1)
 
 # endregion
 
@@ -55,9 +65,20 @@ const REF_WHITE := Vector3(0.95047, 1.0, 1.08883)
 @onready var _split_target: ColorRect = %SplitTargetColor
 @onready var _split_player: ColorRect = %SplitPlayerColor
 @onready var _btn_next: Button = %BtnNext
+@onready var _hp_label: Label = %HPLabel
+@onready var _heart_icon: Label = %HeartIcon
+@onready var _stage_label: Label = %StageLabel
+@onready var _result_title: Label = %ResultTitle
 # endregion
 
 ## 遊戲狀態
+var _hp: float = HP_INITIAL
+## 畫面上數字動畫用（與 _hp 同步至終點）
+var _hp_display: float = HP_INITIAL
+var _hp_tween: Tween
+var _stage: int = 1
+var _game_over: bool = false
+
 var _drops: Array[String] = []
 var _target_color: Color = Color.WHITE
 var _current_color: Color = Color.WHITE
@@ -92,6 +113,8 @@ func _ready() -> void:
 	_modal.visible = false
 	_modal.hide()
 
+	_update_hp_label_immediate()
+	_update_stage_label()
 	start_new_round()
 
 	# 等版面完成後，將調色盤縮放軸心置中（Tween 彈跳用）
@@ -101,6 +124,114 @@ func _ready() -> void:
 func _refresh_mix_pivot() -> void:
 	if _mix_swatch:
 		_mix_swatch.pivot_offset = _mix_swatch.size * 0.5
+
+
+## 每 5 關更新難度參數；第 11 關起滴數與扣血倍率隨關卡增加
+func _get_difficulty_profile(stage: int) -> Dictionary:
+	if stage <= 4:
+		return {
+			"min_drops": 2,
+			"max_drops": 4,
+			"pigment_pool": POOL_3_COLORS.duplicate(),
+			"damage_mult": 1.0,
+		}
+	if stage <= 10:
+		return {
+			"min_drops": 3,
+			"max_drops": 6,
+			"pigment_pool": POOL_4_COLORS.duplicate(),
+			"damage_mult": 1.2,
+		}
+	var block: int = int(floor((stage - 11) / 5.0))
+	var damage_mult: float = 1.2 + 0.15 * float(block + 1)
+	var max_drops: int = 6 + block * 2
+	var min_drops: int = 3 + block
+	min_drops = clampi(min_drops, 2, max_drops)
+	return {
+		"min_drops": min_drops,
+		"max_drops": max_drops,
+		"pigment_pool": POOL_5_COLORS.duplicate(),
+		"damage_mult": damage_mult,
+	}
+
+
+func _update_hp_label_immediate() -> void:
+	_hp_display = _hp
+	if _hp_label:
+		_hp_label.text = "%d" % int(round(_hp))
+	_reset_hud_health_colors()
+
+
+func _update_stage_label() -> void:
+	if _stage_label:
+		_stage_label.text = "%d ⭐" % _stage
+
+
+func _set_hud_health_colors(num: Color, heart: Color) -> void:
+	if _hp_label:
+		_hp_label.add_theme_color_override("font_color", num)
+	if _heart_icon:
+		_heart_icon.add_theme_color_override("font_color", heart)
+
+
+func _reset_hud_health_colors() -> void:
+	_set_hud_health_colors(HUD_HP_TEXT_NORMAL, HUD_HEART_NORMAL)
+
+
+## 扣血：紅色 + 數字快速下降；回血：綠色 + 較活潑曲線；結束恢復白字
+func _play_hp_change_animation(from_val: float, to_val: float, hp_delta: float) -> void:
+	to_val = clampf(to_val, 0.0, float(HP_MAX))
+	if _hp_tween and is_instance_valid(_hp_tween):
+		_hp_tween.kill()
+
+	if absf(hp_delta) < 0.0001:
+		_hp_display = to_val
+		_on_hp_display_step(to_val)
+		_reset_hud_health_colors()
+		return
+
+	var tw := create_tween()
+	_hp_tween = tw
+
+	if hp_delta < 0.0:
+		_set_hud_health_colors(HUD_HP_DAMAGE, HUD_HP_DAMAGE)
+		tw.tween_method(_on_hp_display_step, from_val, to_val, 1.5).set_trans(Tween.TRANS_QUAD).set_ease(
+			Tween.EASE_IN
+		)
+	else:
+		_set_hud_health_colors(HUD_HP_HEAL, HUD_HP_HEAL)
+		## 回血：快速上升、無彈跳
+		tw.tween_method(_on_hp_display_step, from_val, to_val, 0.28).set_trans(Tween.TRANS_QUAD).set_ease(
+			Tween.EASE_OUT
+		)
+
+	tw.tween_callback(_reset_hud_health_colors)
+
+
+func _on_hp_display_step(v: float) -> void:
+	_hp_display = clampf(v, 0.0, float(HP_MAX))
+	if _hp_label:
+		_hp_label.text = "%d" % int(round(_hp_display))
+
+
+## 依本局分數計算 HP 變化（回血不受 damage_mult；扣血會乘倍率）
+func _compute_hp_delta(final_score: float, damage_mult: float) -> float:
+	if final_score >= 99.5:
+		return 2000.0
+	if final_score >= 96.0:
+		return lerp(300.0, 1000.0, (final_score - 96.0) / 3.5)
+	## 90%～96%：少許回血（10～200）
+	if final_score >= 90.0:
+		return lerp(10.0, 200.0, (final_score - 90.0) / 6.0)
+	if final_score >= 88.0:
+		return -lerp(100.0, 500.0, (96.0 - final_score) / 8.0) * damage_mult
+	if final_score >= 60.0:
+		return -lerp(500.0, 2500.0, (88.0 - final_score) / 28.0) * damage_mult
+	return -lerp(2500.0, 5000.0, (60.0 - final_score) / 60.0) * damage_mult
+
+
+func game_over() -> void:
+	_game_over = true
 
 # endregion
 
@@ -215,7 +346,7 @@ func _on_undo_pressed() -> void:
 	if _drops.is_empty():
 		return
 	_drops.pop_back()
-	_undo_count += 0
+	_undo_count += 1
 	_update_mix_ui()
 
 # endregion
@@ -284,21 +415,23 @@ func delta_e_76(lab1: Vector3, lab2: Vector3) -> float:
 ## 將 ΔE 映射到 0~100 的「基礎精準度」再扣 Undo
 func _accuracy_from_delta_e(de: float) -> float:
 	## 使用平滑曲線：ΔE 越小分數越高；係數可依手感微調
-	var base: float = clampf(100.0 * exp(-de / 40.0), 0.0, 100.0)
+	var base: float = clampf(100.0 * exp(-de / 20.0), 0.0, 100.0)
 	return base
 
 # endregion
 
 # region 目標色生成（與玩家使用同一套混色函式，確保可解）
 func _generate_target_color() -> void:
-	var pool: Array[String] = ["R", "Y", "B", "W", "K"]
-	var count: int = randi_range(2, 8)
+	var prof: Dictionary = _get_difficulty_profile(_stage)
+	var pool: Array[String] = prof["pigment_pool"]
+	var mn: int = int(prof["min_drops"])
+	var mx: int = int(prof["max_drops"])
+	var count: int = randi_range(mn, mx)
 	_secret_drops.clear()
 	for i in count:
 		_secret_drops.append(pool.pick_random())
 	_target_color = calculate_color_from_drops(_secret_drops)
 	_apply_panel_bg(_target_swatch, _target_color)
-	print("Target secret drops: ", _secret_drops)
 
 # endregion
 
@@ -309,27 +442,47 @@ func _on_submit_pressed() -> void:
 	var de: float = delta_e_76(lab_t, lab_c)
 
 	var base_score: float = _accuracy_from_delta_e(de)
-	var penalty: float = float(_undo_count) * UNDO_PENALTY_PERCENT
-	var final_score: float = clampf(base_score - penalty, 0.0, 100.0)
+	## Undo 不影響結算分數
+	var final_score: float = clampf(base_score, 0.0, 100.0)
+
+	var prof: Dictionary = _get_difficulty_profile(_stage)
+	var dmg_mult: float = float(prof["damage_mult"])
+	var hp_delta: float = _compute_hp_delta(final_score, dmg_mult)
+	var from_display: float = _hp_display
+	_hp = clampf(_hp + hp_delta, 0.0, float(HP_MAX))
+	_play_hp_change_animation(from_display, _hp, hp_delta)
+
+	var died: bool = _hp <= 0.0
+	if died:
+		game_over()
 
 	_score_label.text = "%.1f%%" % final_score
-	_feedback_label.text = _feedback_for_score(final_score)
 	_split_target.color = _target_color
 	_split_player.color = _current_color
 
-	## 高分用金色點綴（與 HTML accent 接近）
-	if final_score >= 90.0:
-		_score_label.add_theme_color_override("font_color", Color.html("#d4af37"))
+	if died:
+		_result_title.text = "GAME OVER"
+		_feedback_label.text = "生命值歸零"
+		_score_label.add_theme_color_override("font_color", Color.html("#ff5555"))
+		_btn_next.text = "重新開始"
 	else:
-		_score_label.add_theme_color_override("font_color", Color.html("#f0f0f0"))
+		_result_title.text = "ACCURACY MATCH"
+		_feedback_label.text = _feedback_for_score(final_score)
+		if final_score >= 90.0:
+			_score_label.add_theme_color_override("font_color", Color.html("#d4af37"))
+		else:
+			_score_label.add_theme_color_override("font_color", Color.html("#f0f0f0"))
+		_btn_next.text = "NEXT ROUND"
 
 	_modal.visible = true
 	_modal.show()
 
 
 func _feedback_for_score(s: float) -> String:
-	if s >= 98.0:
+	if s == 100.0:
 		return "FLAWLESS PERFECT 神乎其技"
+	if s >= 96.0:
+		return "PERFECT 完美"
 	if s >= 90.0:
 		return "EXCELLENT 優秀"
 	if s >= 80.0:
@@ -348,7 +501,22 @@ func start_new_round() -> void:
 	_update_mix_ui()
 
 
+func _full_restart() -> void:
+	_game_over = false
+	_stage = 1
+	_hp = float(HP_INITIAL)
+	_undo_count = 0
+	_update_hp_label_immediate()
+	_update_stage_label()
+	start_new_round()
+
+
 func _on_next_round_pressed() -> void:
+	if _game_over:
+		_full_restart()
+		return
+	_stage += 1
+	_update_stage_label()
 	start_new_round()
 
 # endregion

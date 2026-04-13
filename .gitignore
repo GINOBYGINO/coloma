@@ -1,3 +1,8 @@
-# Godot 4+ specific ignores
+# Godot 專案專用忽略清單
 .godot/
-/android/
+*.tmp
+*.import/
+export_presets.cfg
+# 視個人情況，如果不想讓別人看到你的編輯器設定：
+.pck
+.exe

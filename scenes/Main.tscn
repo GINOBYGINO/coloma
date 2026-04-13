@@ -115,6 +115,65 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.0588235, 0.0588235, 0.0588235, 1)
 
+[node name="HUD" type="HBoxContainer" parent="."]
+z_index = 15
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 16.0
+offset_right = -16.0
+offset_bottom = 52.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="HPHBox" type="HBoxContainer" parent="HUD"]
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_filter = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="HPLabel" type="Label" parent="HUD/HPHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.941176, 0.941176, 0.941176, 1)
+theme_override_fonts/font = ExtResource("2_rvslj")
+theme_override_font_sizes/font_size = 36
+text = "10000"
+vertical_alignment = 1
+
+[node name="HeartIcon" type="Label" parent="HUD/HPHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("2_rvslj")
+theme_override_font_sizes/font_size = 40
+text = "♥"
+vertical_alignment = 1
+
+[node name="HUDSpacer" type="Control" parent="HUD"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="StageHBox" type="HBoxContainer" parent="HUD"]
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_filter = 2
+theme_override_constants/separation = 6
+alignment = 2
+
+[node name="StageLabel" type="Label" parent="HUD/StageHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.941176, 0.941176, 0.941176, 1)
+theme_override_fonts/font = ExtResource("2_rvslj")
+theme_override_font_sizes/font_size = 36
+text = "1 ⭐"
+horizontal_alignment = 2
+vertical_alignment = 1
+
 [node name="HoldTimer" type="Timer" parent="."]
 wait_time = 0.2
 
@@ -357,6 +416,7 @@ alignment = 1
 
 [node name="ResultModal" type="Control" parent="."]
 unique_name_in_owner = true
+visible = false
 z_index = 10
 layout_mode = 1
 anchors_preset = 15
@@ -389,6 +449,7 @@ theme_override_constants/separation = 16
 alignment = 1
 
 [node name="ResultTitle" type="Label" parent="ResultModal/ModalCenter/ModalVBox"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.4, 0.4, 0.4, 1)
 theme_override_fonts/font = ExtResource("2_rvslj")
