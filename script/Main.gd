@@ -415,7 +415,7 @@ func delta_e_76(lab1: Vector3, lab2: Vector3) -> float:
 ## 將 ΔE 映射到 0~100 的「基礎精準度」再扣 Undo
 func _accuracy_from_delta_e(de: float) -> float:
 	## 使用平滑曲線：ΔE 越小分數越高；係數可依手感微調
-	var base: float = clampf(100.0 * exp(-de / 20.0), 0.0, 100.0)
+	var base: float = clampf(100.0 * exp(-de / 23.0), 0.0, 100.0)
 	return base
 
 # endregion
