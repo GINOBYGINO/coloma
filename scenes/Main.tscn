@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://byqmcqmf8fmfp" path="res://script/Main.gd" id="1_main"]
 [ext_resource type="FontFile" uid="uid://djmvmed1tuf5b" path="res://asset/Font/Xanmono-Regular.ttf" id="2_rvslj"]
-[ext_resource type="StyleBox" uid="uid://bls8db1owr6qa" path="res://Main.tres" id="3_0bbpv"]
+[ext_resource type="StyleBox" uid="uid://bls8db1owr6qa" path="res://style/Main.tres" id="3_0bbpv"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel_target"]
 bg_color = Color(1, 1, 1, 1)
@@ -124,7 +124,7 @@ offset_left = 16.0
 offset_right = -16.0
 offset_bottom = 52.0
 grow_horizontal = 2
-mouse_filter = 2
+mouse_filter = 0
 theme_override_constants/separation = 0
 
 [node name="HPHBox" type="HBoxContainer" parent="HUD"]
@@ -160,7 +160,6 @@ mouse_filter = 2
 [node name="StageHBox" type="HBoxContainer" parent="HUD"]
 layout_mode = 2
 size_flags_horizontal = 0
-mouse_filter = 2
 theme_override_constants/separation = 6
 alignment = 2
 
@@ -173,6 +172,15 @@ theme_override_font_sizes/font_size = 36
 text = "1 ⭐"
 horizontal_alignment = 2
 vertical_alignment = 1
+
+[node name="TestModeToggle" type="CheckButton" parent="HUD/StageHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.941176, 0.941176, 0.941176, 1)
+theme_override_fonts/font = ExtResource("2_rvslj")
+theme_override_font_sizes/font_size = 14
+button_pressed = true
+text = "Test Mode"
 
 [node name="HoldTimer" type="Timer" parent="."]
 wait_time = 0.2
@@ -516,6 +524,32 @@ theme_override_font_sizes/font_size = 11
 text = "YOUR MIX"
 horizontal_alignment = 1
 
+[node name="BtnReportDiscrepancy" type="Button" parent="ResultModal/ModalCenter/ModalVBox"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(220, 40)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.941176, 0.941176, 0.941176, 1)
+theme_override_fonts/font = ExtResource("2_rvslj")
+theme_override_font_sizes/font_size = 13
+theme_override_styles/focus = ExtResource("3_0bbpv")
+theme_override_styles/disabled = ExtResource("3_0bbpv")
+theme_override_styles/hover = ExtResource("3_0bbpv")
+theme_override_styles/pressed = ExtResource("3_0bbpv")
+theme_override_styles/normal = ExtResource("3_0bbpv")
+text = "Report Discrepancy"
+flat = true
+
+[node name="ReportSavedLabel" type="Label" parent="ResultModal/ModalCenter/ModalVBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.38, 0.96, 0.48, 1)
+theme_override_fonts/font = ExtResource("2_rvslj")
+theme_override_font_sizes/font_size = 12
+text = "Report Saved"
+horizontal_alignment = 1
+
 [node name="BtnNext" type="Button" parent="ResultModal/ModalCenter/ModalVBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(220, 44)
@@ -531,3 +565,19 @@ theme_override_styles/pressed = ExtResource("3_0bbpv")
 theme_override_styles/normal_mirrored = ExtResource("3_0bbpv")
 theme_override_styles/normal = ExtResource("3_0bbpv")
 text = "NEXT ROUND"
+
+[node name="HomeButton" type="Button" parent="ResultModal/ModalCenter/ModalVBox"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(220, 44)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.941176, 0.941176, 0.941176, 1)
+theme_override_fonts/font = ExtResource("2_rvslj")
+theme_override_font_sizes/font_size = 14
+theme_override_styles/focus = ExtResource("3_0bbpv")
+theme_override_styles/disabled = ExtResource("3_0bbpv")
+theme_override_styles/hover = ExtResource("3_0bbpv")
+theme_override_styles/pressed = ExtResource("3_0bbpv")
+theme_override_styles/normal = ExtResource("3_0bbpv")
+text = "回到主畫面"
+flat = true

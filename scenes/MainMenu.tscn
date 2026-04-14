@@ -1,0 +1,169 @@
+[gd_scene load_steps=11 format=3 uid="uid://cromhna0rg2lm"]
+
+[ext_resource type="Script" uid="uid://cofpbduknl540" path="res://script/MainMenu.gd" id="1_g188c"]
+[ext_resource type="FontFile" uid="uid://djmvmed1tuf5b" path="res://asset/Font/Xanmono-Regular.ttf" id="2_6uebf"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_start"]
+bg_color = Color(0.0745098, 0.341176, 0.121569, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2wh52"]
+bg_color = Color(0.176, 0.8, 0.2904, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_profile"]
+bg_color = Color(0.088, 0.3428, 0.4, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0ykhv"]
+bg_color = Color(0.176, 0.6856, 0.8, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_settings"]
+bg_color = Color(0.341176, 0.0745098, 0.290196, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ow34m"]
+bg_color = Color(0.8, 0.176, 0.6856, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_friend"]
+bg_color = Color(0.341176, 0.117647, 0.0745098, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_l72w3"]
+bg_color = Color(0.8, 0.28, 0.176, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_g188c")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0588235, 0.0588235, 0.0588235, 1)
+
+[node name="UILayer" type="CanvasLayer" parent="."]
+layer = 5
+
+[node name="MenuRoot" type="Control" parent="UILayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="StartButton" type="Button" parent="UILayer/MenuRoot"]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_bottom = 162.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_disabled_color = Color(0.980392, 0.980392, 0.980392, 1)
+theme_override_colors/font_color = Color(0.980392, 0.980392, 0.980392, 1)
+theme_override_fonts/font = ExtResource("2_6uebf")
+theme_override_font_sizes/font_size = 60
+theme_override_styles/focus = SubResource("StyleBoxFlat_start")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_start")
+theme_override_styles/hover = SubResource("StyleBoxFlat_2wh52")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_start")
+theme_override_styles/normal = SubResource("StyleBoxFlat_start")
+text = "GAME"
+
+[node name="ProfileButton" type="Button" parent="UILayer/MenuRoot"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_bottom = -162.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_disabled_color = Color(0.980392, 0.980392, 0.980392, 1)
+theme_override_colors/font_color = Color(0.980392, 0.980392, 0.980392, 1)
+theme_override_fonts/font = ExtResource("2_6uebf")
+theme_override_font_sizes/font_size = 28
+theme_override_styles/focus = SubResource("StyleBoxFlat_profile")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_profile")
+theme_override_styles/hover = SubResource("StyleBoxFlat_0ykhv")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_profile")
+theme_override_styles/normal = SubResource("StyleBoxFlat_profile")
+text = "PROFILE"
+
+[node name="SettingsButton" type="Button" parent="UILayer/MenuRoot"]
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_top = 162.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_disabled_color = Color(0.980392, 0.980392, 0.980392, 1)
+theme_override_colors/font_color = Color(0.980392, 0.980392, 0.980392, 1)
+theme_override_fonts/font = ExtResource("2_6uebf")
+theme_override_font_sizes/font_size = 28
+theme_override_styles/focus = SubResource("StyleBoxFlat_settings")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_settings")
+theme_override_styles/hover = SubResource("StyleBoxFlat_ow34m")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_settings")
+theme_override_styles/normal = SubResource("StyleBoxFlat_settings")
+text = "SETTING"
+
+[node name="FriendButton" type="Button" parent="UILayer/MenuRoot"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -162.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_disabled_color = Color(0.980392, 0.980392, 0.980392, 1)
+theme_override_colors/font_color = Color(0.980392, 0.980392, 0.980392, 1)
+theme_override_fonts/font = ExtResource("2_6uebf")
+theme_override_font_sizes/font_size = 60
+theme_override_styles/focus = SubResource("StyleBoxFlat_friend")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_friend")
+theme_override_styles/hover = SubResource("StyleBoxFlat_l72w3")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_friend")
+theme_override_styles/normal = SubResource("StyleBoxFlat_friend")
+text = "FRIEND"

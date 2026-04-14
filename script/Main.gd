@@ -39,6 +39,12 @@ const HUD_HEART_NORMAL := Color(1, 1, 1, 1)
 const HUD_HP_DAMAGE := Color(1.0, 0.35, 0.35, 1)
 const HUD_HP_HEAL := Color(0.38, 0.96, 0.48, 1)
 
+## 極深色（低 L*）：人眼對色差較不敏感，放寬 ΔE 對應分數時的有效除數
+const LOW_L_STAR_THRESHOLD := 10.0
+const DARK_PAIR_DE_RELAX := 1.75
+
+const DISCREPANCY_REPORT_PATH := "user://discrepancy_reports.jsonl"
+
 # endregion
 
 # region 節點引用
@@ -65,10 +71,14 @@ const HUD_HP_HEAL := Color(0.38, 0.96, 0.48, 1)
 @onready var _split_target: ColorRect = %SplitTargetColor
 @onready var _split_player: ColorRect = %SplitPlayerColor
 @onready var _btn_next: Button = %BtnNext
+@onready var _btn_home: Button = %HomeButton
 @onready var _hp_label: Label = %HPLabel
 @onready var _heart_icon: Label = %HeartIcon
 @onready var _stage_label: Label = %StageLabel
 @onready var _result_title: Label = %ResultTitle
+@onready var _test_mode_toggle: CheckButton = %TestModeToggle
+@onready var _btn_report_discrepancy: Button = %BtnReportDiscrepancy
+@onready var _report_saved_label: Label = %ReportSavedLabel
 # endregion
 
 ## 遊戲狀態
@@ -88,6 +98,11 @@ var _secret_drops: Array[String] = []
 var _held_pigment: String = ""
 ## 本局 Undo 次數（影響結算精準度）
 var _undo_count: int = 0
+
+## 結算彈窗開啟時的快照（供測試模式上報）
+var _last_delta_e: float = 0.0
+var _last_final_score: float = 0.0
+var _last_drops_snapshot: Array[String] = []
 
 # region 生命週期
 func _ready() -> void:
@@ -109,6 +124,9 @@ func _ready() -> void:
 	_btn_undo.pressed.connect(_on_undo_pressed)
 	_btn_submit.pressed.connect(_on_submit_pressed)
 	_btn_next.pressed.connect(_on_next_round_pressed)
+	_btn_home.pressed.connect(_on_home_pressed)
+	_btn_report_discrepancy.pressed.connect(_report_issue)
+	_test_mode_toggle.toggled.connect(_on_test_mode_toggled)
 
 	_modal.visible = false
 	_modal.hide()
@@ -412,10 +430,12 @@ func delta_e_76(lab1: Vector3, lab2: Vector3) -> float:
 	return sqrt(d.x * d.x + d.y * d.y + d.z * d.z)
 
 
-## 將 ΔE 映射到 0~100 的「基礎精準度」再扣 Undo
-func _accuracy_from_delta_e(de: float) -> float:
-	## 使用平滑曲線：ΔE 越小分數越高；係數可依手感微調
-	var base: float = clampf(100.0 * exp(-de / 23.0), 0.0, 100.0)
+## 將 ΔE 映射到 0~100 的「基礎精準度」。雙方皆為極深色時放寬有效 ΔE，貼近低亮度下的視覺經驗。
+func _accuracy_from_delta_e(de: float, lab_target: Vector3, lab_player: Vector3) -> float:
+	var de_eff: float = de
+	if lab_target.x < LOW_L_STAR_THRESHOLD and lab_player.x < LOW_L_STAR_THRESHOLD:
+		de_eff = de / DARK_PAIR_DE_RELAX
+	var base: float = clampf(100.0 * exp(-de_eff /1.0), 0.0, 100.0)
 	return base
 
 # endregion
@@ -441,9 +461,13 @@ func _on_submit_pressed() -> void:
 	var lab_c: Vector3 = rgb_to_lab(_current_color)
 	var de: float = delta_e_76(lab_t, lab_c)
 
-	var base_score: float = _accuracy_from_delta_e(de)
+	_last_delta_e = de
+	_last_drops_snapshot = _drops.duplicate()
+
+	var base_score: float = _accuracy_from_delta_e(de, lab_t, lab_c)
 	## Undo 不影響結算分數
 	var final_score: float = clampf(base_score, 0.0, 100.0)
+	_last_final_score = final_score
 
 	var prof: Dictionary = _get_difficulty_profile(_stage)
 	var dmg_mult: float = float(prof["damage_mult"])
@@ -465,6 +489,7 @@ func _on_submit_pressed() -> void:
 		_feedback_label.text = "生命值歸零"
 		_score_label.add_theme_color_override("font_color", Color.html("#ff5555"))
 		_btn_next.text = "重新開始"
+		_btn_home.visible = true
 	else:
 		_result_title.text = "ACCURACY MATCH"
 		_feedback_label.text = _feedback_for_score(final_score)
@@ -473,9 +498,67 @@ func _on_submit_pressed() -> void:
 		else:
 			_score_label.add_theme_color_override("font_color", Color.html("#f0f0f0"))
 		_btn_next.text = "NEXT ROUND"
+		_btn_home.visible = false
+
+	if _report_saved_label:
+		_report_saved_label.visible = false
+	_btn_report_discrepancy.visible = _test_mode_toggle.button_pressed
 
 	_modal.visible = true
 	_modal.show()
+
+
+func _color_to_hex(c: Color) -> String:
+	return "#" + c.to_html(false)
+
+
+func _on_test_mode_toggled(_pressed: bool) -> void:
+	if _modal and _modal.visible:
+		_btn_report_discrepancy.visible = _test_mode_toggle.button_pressed
+
+
+func _report_issue() -> void:
+	if not _test_mode_toggle.button_pressed:
+		return
+	var payload := {
+		"target_hex": _color_to_hex(_target_color),
+		"player_hex": _color_to_hex(_current_color),
+		"delta_e": _last_delta_e,
+		"accuracy_percent": _last_final_score,
+		"drops": _last_drops_snapshot.duplicate(),
+		"timestamp": Time.get_datetime_string_from_system(false, true),
+	}
+	if _append_discrepancy_report_line(payload):
+		print("Report Saved: ", JSON.stringify(payload))
+		if _report_saved_label:
+			_report_saved_label.visible = true
+			get_tree().create_timer(2.5).timeout.connect(
+				func(): _hide_report_saved_if_still_open()
+			)
+
+
+func _hide_report_saved_if_still_open() -> void:
+	if _report_saved_label and _modal.visible:
+		_report_saved_label.visible = false
+
+
+## 以 JSON Lines 附加寫入；檔案不存在時先建立。
+func _append_discrepancy_report_line(obj: Dictionary) -> bool:
+	var path := DISCREPANCY_REPORT_PATH
+	if not FileAccess.file_exists(path):
+		var create := FileAccess.open(path, FileAccess.WRITE)
+		if create == null:
+			push_error("無法建立 discrepancy_reports.jsonl")
+			return false
+		create.close()
+	var file := FileAccess.open(path, FileAccess.READ_WRITE)
+	if file == null:
+		push_error("無法開啟 discrepancy_reports.jsonl")
+		return false
+	file.seek_end()
+	file.store_line(JSON.stringify(obj))
+	file.close()
+	return true
 
 
 func _feedback_for_score(s: float) -> String:
@@ -495,6 +578,10 @@ func _feedback_for_score(s: float) -> String:
 func start_new_round() -> void:
 	_modal.hide()
 	_modal.visible = false
+	if _btn_home:
+		_btn_home.visible = false
+	if _report_saved_label:
+		_report_saved_label.visible = false
 	_drops.clear()
 	_undo_count = 0
 	_generate_target_color()
@@ -509,6 +596,10 @@ func _full_restart() -> void:
 	_update_hp_label_immediate()
 	_update_stage_label()
 	start_new_round()
+
+
+func _on_home_pressed() -> void:
+	get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
 
 
 func _on_next_round_pressed() -> void:
