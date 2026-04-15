@@ -44,6 +44,7 @@ const LOW_L_STAR_THRESHOLD := 10.0
 const DARK_PAIR_DE_RELAX := 1.75
 
 const DISCREPANCY_REPORT_PATH := "user://discrepancy_reports.jsonl"
+const MENU_BALL_TRANSITION_META_KEY := "menu_ball_transition_payload"
 
 # endregion
 
@@ -103,12 +104,21 @@ var _undo_count: int = 0
 var _last_delta_e: float = 0.0
 var _last_final_score: float = 0.0
 var _last_drops_snapshot: Array[String] = []
+var _menu_ball_payload: Dictionary = {}
+var _menu_ball_overlay: Control
+var _menu_ball_primary: Panel
+var _menu_ball_secondary: Panel
 
 # region 生命週期
+func _enter_tree() -> void:
+	_prepare_menu_ball_transition_overlay()
+
+
 func _ready() -> void:
 	# 背景色與 HTML 一致
 	if _bg:
 		_bg.color = Color.html("#0f0f0f")
+	_play_menu_ball_transition_if_needed()
 
 	_hold_timer.wait_time = HOLD_DROP_INTERVAL
 	_hold_timer.one_shot = false
@@ -137,6 +147,91 @@ func _ready() -> void:
 
 	# 等版面完成後，將調色盤縮放軸心置中（Tween 彈跳用）
 	call_deferred("_refresh_mix_pivot")
+
+
+func _play_menu_ball_transition_if_needed() -> void:
+	if _menu_ball_overlay == null or _menu_ball_primary == null or _menu_ball_secondary == null:
+		return
+	var vp: Vector2 = get_viewport_rect().size
+	var center := vp * 0.5
+	var primary_diameter: float = float(_menu_ball_payload.get("primary_diameter", vp.length() * 2.2))
+	var secondary_diameter: float = float(_menu_ball_payload.get("secondary_diameter", primary_diameter))
+	var duration: float = float(_menu_ball_payload.get("shrink_duration", 0.52))
+	var delay: float = float(_menu_ball_payload.get("shrink_delay", 0.02))
+
+	var tw := create_tween()
+	tw.tween_interval(maxf(0.0, delay))
+	tw.set_parallel(true)
+	tw.tween_method(
+		func(d: float): _set_transition_ball_geometry(_menu_ball_primary, center, d),
+		primary_diameter,
+		2.0,
+		duration
+	).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_method(
+		func(d: float): _set_transition_ball_geometry(_menu_ball_secondary, center, d),
+		secondary_diameter,
+		2.0,
+		duration
+	).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_IN_OUT)
+	await tw.finished
+	if _menu_ball_overlay:
+		_menu_ball_overlay.queue_free()
+	_menu_ball_overlay = null
+	_menu_ball_primary = null
+	_menu_ball_secondary = null
+
+
+func _prepare_menu_ball_transition_overlay() -> void:
+	if not get_tree().has_meta(MENU_BALL_TRANSITION_META_KEY):
+		return
+	var payload: Variant = get_tree().get_meta(MENU_BALL_TRANSITION_META_KEY)
+	get_tree().remove_meta(MENU_BALL_TRANSITION_META_KEY)
+	if not (payload is Dictionary):
+		return
+	_menu_ball_payload = payload
+
+	var vp: Vector2 = get_viewport().get_visible_rect().size
+	if vp == Vector2.ZERO:
+		return
+	var center := vp * 0.5
+	var primary_diameter: float = float(_menu_ball_payload.get("primary_diameter", vp.length() * 2.2))
+	var secondary_diameter: float = float(_menu_ball_payload.get("secondary_diameter", primary_diameter))
+	var primary_color: Color = _menu_ball_payload.get("primary_color", Color(0.52, 0.52, 0.52, 1.0))
+	var secondary_color: Color = _menu_ball_payload.get("secondary_color", Color(0.22, 0.22, 0.22, 1.0))
+
+	_menu_ball_overlay = Control.new()
+	_menu_ball_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_menu_ball_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_menu_ball_overlay.z_index = 999
+	add_child(_menu_ball_overlay)
+
+	_menu_ball_primary = Panel.new()
+	_menu_ball_primary.add_theme_stylebox_override("panel", _make_transition_ball_style(primary_color))
+	_menu_ball_overlay.add_child(_menu_ball_primary)
+	_set_transition_ball_geometry(_menu_ball_primary, center, primary_diameter)
+
+	_menu_ball_secondary = Panel.new()
+	_menu_ball_secondary.add_theme_stylebox_override("panel", _make_transition_ball_style(secondary_color))
+	_menu_ball_overlay.add_child(_menu_ball_secondary)
+	_set_transition_ball_geometry(_menu_ball_secondary, center, secondary_diameter)
+
+
+func _make_transition_ball_style(color: Color) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = color
+	sb.corner_radius_top_left = 2048
+	sb.corner_radius_top_right = 2048
+	sb.corner_radius_bottom_left = 2048
+	sb.corner_radius_bottom_right = 2048
+	return sb
+
+
+func _set_transition_ball_geometry(ball: Control, center: Vector2, diameter: float) -> void:
+	if ball == null:
+		return
+	ball.size = Vector2(diameter, diameter)
+	ball.position = center - ball.size * 0.5
 
 
 func _refresh_mix_pivot() -> void:
@@ -435,7 +530,7 @@ func _accuracy_from_delta_e(de: float, lab_target: Vector3, lab_player: Vector3)
 	var de_eff: float = de
 	if lab_target.x < LOW_L_STAR_THRESHOLD and lab_player.x < LOW_L_STAR_THRESHOLD:
 		de_eff = de / DARK_PAIR_DE_RELAX
-	var base: float = clampf(100.0 * exp(-de_eff /1.0), 0.0, 100.0)
+	var base: float = clampf(100.0 * exp(-de_eff /23.0), 0.0, 100.0)
 	return base
 
 # endregion

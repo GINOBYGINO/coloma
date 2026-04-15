@@ -1,6 +1,20 @@
 extends Control
 
 const GAME_SCENE := "res://scenes/Main.tscn"
+const MENU_BALL_TRANSITION_META_KEY := "menu_ball_transition_payload"
+
+# Start 轉場可調參數（集中於此）
+const START_BALL_COLOR := Color(0.52, 0.52, 0.52, 1.0)
+const START_BALL_START_DIAMETER := 120.0
+const START_BALL_EXPAND_DURATION := 0.12
+const START_DARK_BALL_COLOR := Color(0.22, 0.22, 0.22, 1.0)
+const START_DARK_BALL_START_DIAMETER := 0.0
+const START_DARK_BALL_END_DIAMETER := 1300.0
+const START_DARK_BALL_EXPAND_DURATION := 0.98
+const START_BUTTON_PUSH_DURATION := 0.3
+const START_BUTTON_PUSH_EXTRA_DISTANCE := 220.0
+const START_BALL_SHRINK_DURATION := 0.80
+const START_BALL_SHRINK_DELAY := 0.02
 
 @onready var _menu_root: Control = $UILayer/MenuRoot
 @onready var _start_btn: Button = $UILayer/MenuRoot/StartButton
@@ -10,6 +24,7 @@ const GAME_SCENE := "res://scenes/Main.tscn"
 
 var _final_rects: Dictionary = {}
 var _opening_done: bool = false
+var _start_transition_playing: bool = false
 
 
 func _ready() -> void:
@@ -129,9 +144,99 @@ func _set_buttons_interactive(enabled: bool) -> void:
 
 
 func _on_start_pressed() -> void:
-	if not _opening_done:
+	if not _opening_done or _start_transition_playing:
 		return
+	_play_start_transition()
+
+
+func _play_start_transition() -> void:
+	_start_transition_playing = true
+	_set_buttons_interactive(false)
+
+	var vp: Vector2 = get_viewport_rect().size
+	var center := vp * 0.5
+
+	var overlay := Control.new()
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	overlay.z_index = 1000
+	add_child(overlay)
+
+	var ball := Panel.new()
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = START_BALL_COLOR
+	sb.corner_radius_top_left = 2048
+	sb.corner_radius_top_right = 2048
+	sb.corner_radius_bottom_left = 2048
+	sb.corner_radius_bottom_right = 2048
+	ball.add_theme_stylebox_override("panel", sb)
+	overlay.add_child(ball)
+	_set_ball_geometry(ball, center, START_BALL_START_DIAMETER)
+	var dark_ball := Panel.new()
+	var dark_sb := StyleBoxFlat.new()
+	dark_sb.bg_color = START_DARK_BALL_COLOR
+	dark_sb.corner_radius_top_left = 2048
+	dark_sb.corner_radius_top_right = 2048
+	dark_sb.corner_radius_bottom_left = 2048
+	dark_sb.corner_radius_bottom_right = 2048
+	dark_ball.add_theme_stylebox_override("panel", dark_sb)
+	overlay.add_child(dark_ball)
+	_set_ball_geometry(dark_ball, center, START_DARK_BALL_START_DIAMETER)
+
+	var max_diameter: float = vp.length() * 2.2
+	var dark_max_diameter: float = max_diameter * 1.1
+	var push_distance: float = vp.length() + START_BUTTON_PUSH_EXTRA_DISTANCE
+	var buttons: Array[Button] = [_start_btn, _profile_btn, _settings_btn, _friend_btn]
+
+	var tw := create_tween()
+	tw.set_parallel(true)
+	tw.tween_method(
+		func(d: float): _set_ball_geometry(ball, center, d),
+		START_BALL_START_DIAMETER,
+		max_diameter,
+		START_BALL_EXPAND_DURATION
+	).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT)
+
+	for b in buttons:
+		var btn_center: Vector2 = b.global_position + b.size * 0.5
+		var dir: Vector2 = (btn_center - center).normalized()
+		if dir.length_squared() < 0.0001:
+			dir = Vector2.LEFT
+		var target_pos: Vector2 = b.global_position + dir * push_distance
+		tw.tween_property(b, "global_position", target_pos, START_BUTTON_PUSH_DURATION).set_trans(
+			Tween.TRANS_QUINT
+		).set_ease(Tween.EASE_IN)
+
+	await tw.finished
+	var tw_dark := create_tween()
+	tw_dark.tween_method(
+		func(d: float): _set_ball_geometry(dark_ball, center, d),
+		START_DARK_BALL_START_DIAMETER,
+		START_DARK_BALL_END_DIAMETER,
+		START_DARK_BALL_EXPAND_DURATION
+	).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT)
+	await tw_dark.finished
+
+	get_tree().set_meta(
+		MENU_BALL_TRANSITION_META_KEY,
+		{
+			"primary_color": START_BALL_COLOR,
+			"primary_diameter": max_diameter,
+			"secondary_color": START_DARK_BALL_COLOR,
+			"secondary_diameter": dark_max_diameter,
+			"shrink_duration": START_BALL_SHRINK_DURATION,
+			"shrink_delay": START_BALL_SHRINK_DELAY,
+		}
+	)
+	await get_tree().process_frame
 	get_tree().change_scene_to_file(GAME_SCENE)
+
+
+func _set_ball_geometry(ball: Control, center: Vector2, diameter: float) -> void:
+	if ball == null:
+		return
+	ball.size = Vector2(diameter, diameter)
+	ball.position = center - ball.size * 0.5
 
 
 func _on_profile_pressed() -> void:
